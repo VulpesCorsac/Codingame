@@ -1,4 +1,6 @@
 1) Sometimes surfaces 2 times in a row -> loses
+2) Do not torpedo when can hit yourself (thus do not stalk too near)
+3) When hit - it can be not only because of torpedo
 
 1) Maybe shoot first than move?
 2) Mines

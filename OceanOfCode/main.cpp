@@ -232,19 +232,6 @@ public:
             out << "Unknown action: " << order[0] << "\n";
         }
 
-        if (my_state.hit) {
-            out << "Hit\n";
-
-            auto it = partition(opponent_positions.begin(),
-                    opponent_positions.end(),
-                    [this](Tile& tile) {
-                        return distance(tile, my_state.current_potision) <= 4;
-                    });
-            opponent_positions.resize(it - opponent_positions.begin());
-
-            out << "\nPositions: " << opponent_positions.size() << "\n";
-        }
-
         if (DEBUG_OUTPUT) {
             cerr << out.str() << "\n";
         }
@@ -302,6 +289,14 @@ public:
 
     void insertMyPositionInVisitedTiles() {
         visited_tiles.insert(my_state.current_potision);
+    }
+
+    void makeMove(int direction, const string& charge, bool flush) {
+        insertMyPositionInVisitedTiles();
+        cout << "MOVE " << directions_names[direction] << " " << charge;
+        if (flush) {
+            cout << endl;
+        }
     }
 
     int distance(const Tile& t1, const Tile& t2) const {
@@ -362,19 +357,19 @@ public:
         return sectorNumber(row, col) == sector;
     }
 
-    bool canMove(const Tile& from, const Tile& to) {
+    bool canMove(const Tile& from, const Tile& to) const {
         return canMove(from.first, from.second, to.first, to.second);
     }
 
-    bool canMove(const Tile& from, int to_row, int to_col) {
+    bool canMove(const Tile& from, int to_row, int to_col) const {
         return canMove(from.first, from.second, to_row, to_col);
     }
 
-    bool canMove(int from_row, int from_col, const Tile& to) {
+    bool canMove(int from_row, int from_col, const Tile& to) const {
         return canMove(from_row, from_col, to.first, to.second);
     }
 
-    bool canMove(int from_row, int from_col, int to_row, int to_col) {
+    bool canMove(int from_row, int from_col, int to_row, int to_col) const {
         if (from_row != to_row && from_col != to_col) {
             return false;
         }
@@ -434,11 +429,7 @@ public:
         if (found_direction >= 0) {
             my_state.current_potision.first  += d_row[found_direction];
             my_state.current_potision.second += d_col[found_direction];
-            insertMyPositionInVisitedTiles();
-            cout << "MOVE " << directions_names[found_direction] << " " << charge;
-            if (flush) {
-                cout << endl;
-            }
+            makeMove(found_direction, charge, flush);
         } else {
             surfaceMove(flush);
         }
@@ -508,11 +499,7 @@ public:
         if (max_length_direction >= 0) {
             my_state.current_potision.first  += d_row[max_length_direction];
             my_state.current_potision.second += d_col[max_length_direction];
-            insertMyPositionInVisitedTiles();
-            cout << "MOVE " << directions_names[max_length_direction] << " " << charge;
-            if (flush) {
-                cout << endl;
-            }
+            makeMove(max_length_direction, charge, flush);
         } else {
             surfaceMove(flush);
         }
@@ -648,11 +635,7 @@ public:
             int direction = directionNumber(findDirection(my_state.current_potision, prev_row, prev_col));
             my_state.current_potision.first  += d_row[direction];
             my_state.current_potision.second += d_col[direction];
-            insertMyPositionInVisitedTiles();
-            cout << "MOVE " << directions_names[direction] << " " << charge;
-            if (flush) {
-                cout << endl;
-            }
+            makeMove(direction, charge, flush);
         }
     }
 
@@ -674,12 +657,12 @@ public:
 
     void shootMove(const string& charge, bool flush) {
         if (opponent_positions.size() > stalk_when_positions_less_than) {
-            longestMove(charge, true);
-        } else {
             if (DEBUG_OUTPUT) {
-                cerr << "Stalker move\n";
+                cerr << "Longest move" << endl;
             }
 
+            longestMove(charge, true);
+        } else {
             Tile stalk = {0, 0};
             for (auto& position : opponent_positions) {
                 stalk.first  += position.first;
@@ -688,11 +671,37 @@ public:
             stalk.first  /= opponent_positions.size();
             stalk.second /= opponent_positions.size();
 
-            stalkerMove(stalk, charge, false);
-            if (!my_state.torpedo_cooldown &&
-                distance(my_state.current_potision, stalk) <= 4) {
-                    cout << " | TORPEDO " << stalk.second << " " << stalk.first;
+            if (DEBUG_OUTPUT) {
+                cerr << "Possible positions: ";
+                for (auto& position : opponent_positions) {
+                    cerr << "{" << position.first << "," << position.second << "} ";
                 }
+                cerr << "\n";
+                cerr << "Stalking: {" << stalk.first << ", " << stalk.second << "}" << endl;
+            }
+
+            if (distance(my_state.current_potision, stalk) > 2) {
+                if (DEBUG_OUTPUT) {
+                    cerr << "Stalker move" << endl;
+                }
+
+                stalkerMove(stalk, charge, false);
+            } else {
+                if (DEBUG_OUTPUT) {
+                    cerr << "Random move" << endl;
+                }
+
+                randomMove(charge, false);
+            }
+
+            if (!my_state.torpedo_cooldown) {
+                for (auto& position : opponent_positions) {
+                    if (distance(my_state.current_potision, position) <= 4) {
+                        cout << " | TORPEDO " << position.second << " " << position.first;
+                        break;
+                    }
+                }
+            }
             cout << endl;
         }
     }
