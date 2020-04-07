@@ -5,6 +5,7 @@
 #include <sstream>
 #include <vector>
 #include <set>
+#include <unordered_set>
 #include <assert.h>
 
 using namespace std;
@@ -95,25 +96,26 @@ public:
 
     void updatePossibleOpponentsPositions(string& opponent_order) {
         vector < string > order = splitString(opponent_order, ' ');
+        stringstream out;
 
         if (order[0] == "move") {
-            cout << " move ";
+            out << "Move ";
             int direction = -1;
 
             if (order[1] == "n") {
-                cout << "n";
+                out << "N";
                 direction = 0;
             } else if (order[1] == "s") {
-                cout << "s";
+                out << "S";
                 direction = 1;
             } else if (order[1] == "w") {
-                cout << "w";
+                out << "W";
                 direction = 2;
             } else if (order[1] == "e") {
-                cout << "e";
+                out << "E";
                 direction = 3;
             } else {
-                cout << "unknow direction: " << order[1];
+                out << "unknown move: " << order[1];
             }
 
             if (direction >= 0) {
@@ -130,15 +132,45 @@ public:
                                 });
             opponent_positions.resize(it - opponent_positions.begin());
 
-            cout << " pos: " << opponent_positions.size();
+            out << "\nPositions: " << opponent_positions.size() << "\n";
         } else if (order[0] == "torpedo") {
-            cout << " torpedo";
+            out << "Torpedo";
+
+            int x = atoi(order[1].c_str());
+            int y = atoi(order[2].c_str());
+
+            out << " at {" << x << "," << y << "}";
+
+            auto it = partition(opponent_positions.begin(),
+                                opponent_positions.end(),
+                                [this, x, y](Tile& tile) {
+                                    return distance(tile, {y, x}) <= 4;
+                                });
+            opponent_positions.resize(it - opponent_positions.begin());
+
+            out << "\nPositions: " << opponent_positions.size() << "\n";
         } else if (order[0] == "surface") {
-            cout << " surface";
+            out << "Surface";
+
+            int sector = atoi(order[1].c_str());
+            out << " at sector {" << sector << "}";
+
+            auto it = partition(opponent_positions.begin(),
+                                opponent_positions.end(),
+                                [this, sector](Tile& tile) {
+                                    return isInSector(tile, sector);
+                                });
+            opponent_positions.resize(it - opponent_positions.begin());
+
+            out << "\nPositions: " << opponent_positions.size() << "\n";
         } else if (order[0] == "na") {
-            cout << " no action";
+            out << " no action\n";
         } else {
-            cout << " unknown";
+            out << " unknown action: " << order[0] << "\n";
+        }
+
+        if (DEBUG_OUTPUT) {
+            cerr << out.str() << "\n";
         }
     }
 
@@ -151,12 +183,16 @@ public:
             }
         }
 
-        cout << "MSG";
         vector < string > orders = splitString(opponent_orders, '&');
         for (auto& order : orders) {
             updatePossibleOpponentsPositions(order);
         }
-        cout << " | ";
+
+        if (DEBUG_OUTPUT) {
+            if (opponent_positions.size() == 1) {
+                cerr << " opponent position at {" << opponent_positions[0].first << "," << opponent_positions[0].second << "}\n";
+            }
+        }
     }
 
     void getMyRandomPosition() {
@@ -172,7 +208,7 @@ public:
         my_state.current_potision = possible_positions[rand() % possible_positions.size()];
     }
 
-    void printMyPosition(bool flush = true) {
+    void printMyPosition(bool flush = true) const {
         cout << my_state.current_potision.second << " " << my_state.current_potision.first;
         if (flush) {
             cout << endl;
@@ -183,28 +219,65 @@ public:
         visited_tiles.insert(my_state.current_potision);
     }
 
-    bool isInsideMap(const Tile& tile) {
+    int distance(const Tile& t1, const Tile& t2) const {
+        return abs(t1.first - t2.first) + abs(t1.second - t2.second);
+    }
+
+    bool isInsideMap(const Tile& tile) const {
         return isInsideMap(tile.first, tile.second);
     }
 
-    bool isInsideMap(int row, int col) {
+    bool isInsideMap(int row, int col) const {
         return ((0 <= row && row < width) &&
                 (0 <= col && col < height));
     }
 
-    bool isIsland(const Tile& tile) {
+    bool isIsland(const Tile& tile) const {
         return isIsland(tile.first, tile.second);
     }
 
-    bool isIsland(int row, int col) {
+    bool isIsland(int row, int col) const {
         return game_map[row][col] == TILE_ISLAND;
     }
 
-    bool isVisited(int row, int col) {
+    bool isVisited(const Tile& tile) const {
+        return isVisited(tile.first, tile.second);
+    }
+
+    bool isVisited(int row, int col) const {
         return visited_tiles.count(Tile{row, col}) > 0;
     }
 
-    void randomMove() {
+    int sectorNumber(const Tile& tile) const {
+        return sectorNumber(tile.first, tile.second);
+    }
+
+    int sectorNumber(int row, int col) const {
+        int row_sector = row / 5;
+        int col_sector = col / 5;
+
+        if (row_sector == 0) {
+            return 1 + col_sector;
+        }
+        if (row_sector == 1) {
+            return 4 + col_sector;
+        }
+        if (row_sector == 2) {
+            return 7 + col_sector;
+        }
+
+        return -1;
+    }
+
+    bool isInSector(const Tile& tile, int sector) const {
+        return isInSector(tile.first, tile.second, sector);
+    }
+
+    bool isInSector(int row, int col, int sector) const {
+        return sectorNumber(row, col) == sector;
+    }
+
+    void randomMove(const string& charge = "TORPEDO", bool flush = true) {
         int found_direction = -1;
         vector < int > directions = {0, 1, 2, 3};
         random_shuffle(directions.begin(), directions.end());
@@ -223,12 +296,124 @@ public:
             my_state.current_potision.first  += d_row[found_direction];
             my_state.current_potision.second += d_col[found_direction];
             insertMyPositionInVisitedTiles();
-            cout << "MOVE " << directions_names[found_direction] << " TORPEDO" << endl;
+            cout << "MOVE " << directions_names[found_direction] << " " << charge;
+            if (flush) {
+                cout << endl;
+            }
         } else {
             visited_tiles.clear();
             insertMyPositionInVisitedTiles();
-            cout << "SURFACE" << endl;
+            cout << "SURFACE";
+            if (flush) {
+                cout << endl;
+            }
         }
+    }
+
+    int dfs(const Tile& tile, int depth = 0) {
+        return dfs(tile.first, tile.second, depth);
+    }
+
+    int dfs(int row, int col, int depth = 0) {
+//        cerr << "DFS from {" << row << "," << col << "}" << endl;
+
+        if (!isInsideMap(row, col) ||
+            isIsland(row, col) ||
+            isVisited(row, col)) {
+
+            return -1;
+        }
+
+        if (depth > max_dfs_depth_for_longest_path) {
+            return 0;
+        }
+
+        visited_tiles.insert({row, col});
+
+        int ans = -1;
+        vector < int > directions = {0, 1, 2, 3};
+        random_shuffle(directions.begin(), directions.end());
+        for (const auto& current_direction : directions) {
+            int new_row = row + d_row[current_direction];
+            int new_col = col + d_col[current_direction];
+
+            ans = max(ans, dfs(new_row, new_col, depth+1));
+
+            if (ans > max_dfs_depth_for_longest_path - depth - 1) {
+                break;
+            }
+        }
+
+        visited_tiles.erase({row, col});
+
+        return ans + 1;
+    }
+
+    void longestMove(const string& charge = "TORPEDO", bool flush = true) {
+        int max_length = 0;
+        int max_length_direction = -1;
+        vector < int > directions = {0, 1, 2, 3};
+        random_shuffle(directions.begin(), directions.end());
+        for (const auto& current_direction : directions) {
+            int new_row = my_state.current_potision.first  + d_row[current_direction];
+            int new_col = my_state.current_potision.second + d_col[current_direction];
+            int current_length = dfs(new_row, new_col);
+
+            if (DEBUG_OUTPUT) {
+                cerr << "Direction : " << directions_names[current_direction] << ", length = " << current_length << endl;
+            }
+
+            if (current_length > max_length) {
+                max_length = current_length;
+                max_length_direction = current_direction;
+            }
+        }
+
+        if (max_length_direction >= 0) {
+            my_state.current_potision.first  += d_row[max_length_direction];
+            my_state.current_potision.second += d_col[max_length_direction];
+            insertMyPositionInVisitedTiles();
+            cout << "MOVE " << directions_names[max_length_direction] << " " << charge;
+            if (flush) {
+                cout << endl;
+            }
+        } else {
+            visited_tiles.clear();
+            insertMyPositionInVisitedTiles();
+            cout << "SURFACE";
+            if (flush) {
+                cout << endl;
+            }
+        }
+    }
+
+    void stalkerMove(const string& charge = "TORPEDO", bool flush = true) {
+        longestMove(charge, flush);
+    }
+
+    void shootMove(const string& charge = "TORPEDO", bool flush = true) {
+        if (opponent_positions.size() > 1) {
+            longestMove(charge);
+        } else {
+            stalkerMove(charge, false);
+            if (!my_state.torpedo_cooldown &&
+                distance(my_state.current_potision, opponent_positions[0]) <= 4) {
+                    cout << " | TORPEDO " << opponent_positions[0].second << " " << opponent_positions[0].first;
+                }
+            cout << endl;
+        }
+    }
+
+    string whatToCharge() const {
+        if (my_state.torpedo_cooldown > 0) {
+            return "TORPEDO";
+        }
+
+        return "TORPEDO";
+    }
+
+    void move() {
+        shootMove(whatToCharge());
     }
 
 public:
@@ -251,8 +436,12 @@ public:
 
     int frame = -1;
 
-    const int TILE_FREE   =  0;
-    const int TILE_ISLAND = -1;
+    static constexpr int TILE_FREE   =  0;
+    static constexpr int TILE_ISLAND = -1;
+
+    static constexpr int max_dfs_depth_for_longest_path = 20;
+
+    static constexpr bool DEBUG_OUTPUT = false;
 
     static constexpr int directions = 4;
     int d_row[directions] = {-1, +1,  0,  0};
@@ -266,6 +455,7 @@ public:
 
 int main() {
     Game game;
+
     game.readMapData();
     game.getMyRandomPosition();
     game.printMyPosition();
@@ -273,6 +463,6 @@ int main() {
 
     while (true) {
         game.readState();
-        game.randomMove();
+        game.move();
     }
 }

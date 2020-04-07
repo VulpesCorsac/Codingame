@@ -1,8 +1,10 @@
 # depslib dependency file v1.0
-1586250675 source:c:\users\george\yandexdisk\geo_prog\codingame\oceanofcode\main.cpp
+1586257321 source:c:\users\george\yandexdisk\geo_prog\codingame\oceanofcode\main.cpp
 	<algorithm>
 	<iostream>
+	<stdio.h>
 	<string>
+	<sstream>
 	<vector>
 	<set>
 	<assert.h>
