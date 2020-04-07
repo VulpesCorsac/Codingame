@@ -1,3 +1,5 @@
+1) Sometimes surfaces 2 times in a row -> loses
+
 1) Maybe shoot first than move?
 2) Mines
 3) Silent move if hit

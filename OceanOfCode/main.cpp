@@ -232,6 +232,19 @@ public:
             out << "Unknown action: " << order[0] << "\n";
         }
 
+        if (my_state.hit) {
+            out << "Hit\n";
+
+            auto it = partition(opponent_positions.begin(),
+                    opponent_positions.end(),
+                    [this](Tile& tile) {
+                        return distance(tile, my_state.current_potision) <= 4;
+                    });
+            opponent_positions.resize(it - opponent_positions.begin());
+
+            out << "\nPositions: " << opponent_positions.size() << "\n";
+        }
+
         if (DEBUG_OUTPUT) {
             cerr << out.str() << "\n";
         }
@@ -547,7 +560,7 @@ public:
         }
     }
 
-    void stalkerMove(const string& charge, bool flush) {
+    void stalkerMove(const Tile& stalk, const string& charge, bool flush) {
         vector < vector < int > > dfs_state(height, vector < int > (width, -1));
         dfs_state[my_state.current_potision.first][my_state.current_potision.second] = 0;
 
@@ -576,8 +589,8 @@ public:
                     dfs.push({new_row, new_col});
                 }
 
-                if (new_row == opponent_positions[0].first &&
-                    new_col == opponent_positions[0].second) {
+                if (new_row == stalk.first &&
+                    new_col == stalk.second) {
                     break;
                 }
             }
@@ -594,11 +607,11 @@ public:
         }
         //*/
 
-        if (dfs_state[opponent_positions[0].first][opponent_positions[0].second] == -1) {
+        if (dfs_state[stalk.first][stalk.second] == -1) {
             surfaceMove(flush);
         } else {
-            int prev_row = opponent_positions[0].first;
-            int prev_col = opponent_positions[0].second;
+            int prev_row = stalk.first;
+            int prev_col = stalk.second;
             int new_row = prev_row;
             int new_col = prev_col;
 
@@ -628,8 +641,8 @@ public:
                 }
             }
             if (DEBUG_OUTPUT) {
-                cerr << "My position: {" << my_state.current_potision.first << "," << my_state.current_potision.second << "}\n";
-                cerr << "My next cell: {" << prev_row << "," << prev_col << "}\n";
+//                cerr << "My position: {" << my_state.current_potision.first << "," << my_state.current_potision.second << "}\n";
+//                cerr << "My next cell: {" << prev_row << "," << prev_col << "}\n";
             }
 
             int direction = directionNumber(findDirection(my_state.current_potision, prev_row, prev_col));
@@ -660,14 +673,25 @@ public:
     }
 
     void shootMove(const string& charge, bool flush) {
-        if (opponent_positions.size() > 1) {
+        if (opponent_positions.size() > stalk_when_positions_less_than) {
             longestMove(charge, true);
         } else {
-            cerr << "Stalker move\n";
-            stalkerMove(charge, false);
+            if (DEBUG_OUTPUT) {
+                cerr << "Stalker move\n";
+            }
+
+            Tile stalk = {0, 0};
+            for (auto& position : opponent_positions) {
+                stalk.first  += position.first;
+                stalk.second += position.second;
+            }
+            stalk.first  /= opponent_positions.size();
+            stalk.second /= opponent_positions.size();
+
+            stalkerMove(stalk, charge, false);
             if (!my_state.torpedo_cooldown &&
-                distance(my_state.current_potision, opponent_positions[0]) <= 4) {
-                    cout << " | TORPEDO " << opponent_positions[0].second << " " << opponent_positions[0].first;
+                distance(my_state.current_potision, stalk) <= 4) {
+                    cout << " | TORPEDO " << stalk.second << " " << stalk.first;
                 }
             cout << endl;
         }
@@ -707,7 +731,7 @@ public:
 
 public:
     struct PlayerState {
-        int life;
+        int life = 6;
         int torpedo_cooldown;
         int sonar_cooldown;
         int silence_cooldown;
@@ -732,8 +756,9 @@ public:
     static constexpr int TILE_ISLAND = -1;
 
     static constexpr int max_dfs_depth_for_longest_path = 20;
+    static constexpr int stalk_when_positions_less_than = 5;
 
-    static constexpr bool DEBUG_OUTPUT = false;
+    static constexpr bool DEBUG_OUTPUT = true;
 
     static constexpr int directions = 4;
     int d_row[directions] = {-1, +1,  0,  0};
