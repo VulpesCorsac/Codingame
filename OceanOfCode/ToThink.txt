@@ -1,7 +1,3 @@
-1) Sometimes surfaces 2 times in a row -> loses
-2) Do not torpedo when can hit yourself (thus do not stalk too near)
-3) When hit - it can be not only because of torpedo
-
-1) Maybe shoot first than move?
-2) Mines
-3) Silent move if hit
+1) Mines
+2) When longest path analyze also if can decrease your possible positions
+3) Maybe shoot first than move?

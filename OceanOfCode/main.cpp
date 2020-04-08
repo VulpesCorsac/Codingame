@@ -87,7 +87,7 @@ public:
         int new_life;
         cin >> new_life;
         if ((!my_state.surfaced && my_state.life + 0 != new_life) ||
-            ( my_state.surfaced && my_state.life + 1 != new_life)) {
+            ( my_state.surfaced && my_state.life - 1 != new_life)) {
             my_state.hit = true;
 
             if (DEBUG_OUTPUT) {
@@ -111,7 +111,7 @@ public:
         getline(cin, opponent_orders);
 
         if (DEBUG_OUTPUT) {
-            cerr << "State read" << endl;
+//            cerr << "State read" << endl;
         }
 
         parseOpponentOrders(opponent_orders);
@@ -239,7 +239,7 @@ public:
 
     void parseOpponentOrders(string& opponent_orders) {
         if (DEBUG_OUTPUT) {
-            cerr << "Parsing opponent orders" << endl;
+//            cerr << "Parsing opponent orders" << endl;
         }
 
         transform(opponent_orders.begin(), opponent_orders.end(), opponent_orders.begin(), ::tolower);
@@ -253,7 +253,7 @@ public:
         vector < string > orders = splitString(opponent_orders, '&');
 
         if (DEBUG_OUTPUT) {
-            cerr << "Opponent had " << orders.size() << " orders" << endl;
+//            cerr << "Opponent had " << orders.size() << " orders" << endl;
         }
 
         for (auto& order : orders) {
@@ -402,6 +402,10 @@ public:
     }
 
     void surfaceMove(bool flush) {
+        if (DEBUG_OUTPUT) {
+            cerr << "Surface move" << endl;
+        }
+
         visited_tiles.clear();
         insertMyPositionInVisitedTiles();
         my_state.surfaced = true;
@@ -412,15 +416,19 @@ public:
     }
 
     void randomMove(const string& charge, bool flush) {
+        if (DEBUG_OUTPUT) {
+            cerr << "Random move" << endl;
+        }
+
         int found_direction = -1;
         vector < int > directions = {0, 1, 2, 3};
         random_shuffle(directions.begin(), directions.end());
         for (const auto& current_direction : directions) {
             int new_row = my_state.current_potision.first  + d_row[current_direction];
             int new_col = my_state.current_potision.second + d_col[current_direction];
-            if (isInsideMap(new_row, new_col) &&
-                !isIsland(new_row, new_col) &&
-                !isVisited(new_row, new_col)) {
+            if ( isInsideMap(new_row, new_col) &&
+                !isIsland   (new_row, new_col) &&
+                !isVisited  (new_row, new_col)) {
                 found_direction = current_direction;
                 break;
             }
@@ -477,6 +485,10 @@ public:
     }
 
     void longestMove(const string& charge, bool flush) {
+        if (DEBUG_OUTPUT) {
+            cerr << "Longest move" << endl;
+        }
+
         int max_length = 0;
         int max_length_direction = -1;
         vector < int > directions = {0, 1, 2, 3};
@@ -548,6 +560,10 @@ public:
     }
 
     void stalkerMove(const Tile& stalk, const string& charge, bool flush) {
+        if (DEBUG_OUTPUT) {
+            cerr << "Stalker move" << endl;
+        }
+
         vector < vector < int > > dfs_state(height, vector < int > (width, -1));
         dfs_state[my_state.current_potision.first][my_state.current_potision.second] = 0;
 
@@ -595,7 +611,11 @@ public:
         //*/
 
         if (dfs_state[stalk.first][stalk.second] == -1) {
-            surfaceMove(flush);
+            if (my_state.life >= do_not_surface_when_stalk_below_life) {
+                surfaceMove(flush);
+            } else {
+                longestMove(charge, flush);
+            }
         } else {
             int prev_row = stalk.first;
             int prev_col = stalk.second;
@@ -640,7 +660,81 @@ public:
     }
 
     void silentMove(bool flush) {
+        if (DEBUG_OUTPUT) {
+            cerr << "Silent move" << endl;
+        }
+
+        my_state.must_move_silently = false;
+
+        bool can_move_silently = false;
+        int found_direction = -1;
+        int found_length = 5;
+
+        for (int length = 4; length > 0; --length) {
+            if (DEBUG_OUTPUT) {
+//                cerr << "Trying length: " << length << endl;
+            }
+            for (int direction = 0; direction < directions; ++direction) {
+                if (DEBUG_OUTPUT) {
+//                    cerr << "Trying direction: " << directions_names[direction] << endl;
+                }
+                can_move_silently = true;
+                for (int step = 1; step <= length; ++step) {
+                    int new_row = my_state.current_potision.first  + step * d_row[direction];
+                    int new_col = my_state.current_potision.second + step * d_col[direction];
+                    if (DEBUG_OUTPUT) {
+//                        cerr << "{" << new_row << "," << new_col << "} ";
+                    }
+
+                    if (!isInsideMap(new_row, new_col) ||
+                         isVisited  (new_row, new_col) ||
+                         isIsland   (new_row, new_col)) {
+                        if (DEBUG_OUTPUT) {
+//                            cerr << " - failed" << endl;
+                        }
+
+                        can_move_silently = false;
+                        break;
+                    }
+                }
+                if (can_move_silently) {
+                    found_direction = direction;
+                    found_length = length;
+                    break;
+                }
+            }
+            if (can_move_silently) {
+                break;
+            }
+        }
+
+        if (found_direction == -1) {
+            surfaceMove(flush);
+
+            my_state.must_move_silently = true;
+        } else {
+            for (int step = 1; step <= found_length; ++step) {
+                visited_tiles.insert({my_state.current_potision.first  + step * d_row[found_direction],
+                                      my_state.current_potision.second + step * d_col[found_direction]});
+            }
+            my_state.current_potision.first  += found_length * d_row[found_direction];
+            my_state.current_potision.second += found_length * d_col[found_direction];
+            insertMyPositionInVisitedTiles();
+
+            cout << "SILENCE " << directions_names[found_direction] << " " << found_length;
+
+            if (flush) {
+                cout << endl;
+            }
+        }
+    }
+
+    void mineActions(bool flush) {
         /// TODO
+
+        if (flush) {
+            cout << endl;
+        }
     }
 
     bool setMine(bool flush) {
@@ -656,12 +750,16 @@ public:
     }
 
     void shootMove(const string& charge, bool flush) {
-        if (opponent_positions.size() > stalk_when_positions_less_than) {
-            if (DEBUG_OUTPUT) {
-                cerr << "Longest move" << endl;
-            }
+        if (DEBUG_OUTPUT) {
+            cerr << "Shoot move" << endl;
+        }
 
-            longestMove(charge, true);
+        if ((my_state.silence_cooldown == 0) && (my_state.hit || my_state.must_move_silently)) {
+            silentMove(false);
+            mineActions(true);
+        } else if (opponent_positions.size() > stalk_when_positions_less_than) {
+            longestMove(charge, false);
+            mineActions(true);
         } else {
             Tile stalk = {0, 0};
             for (auto& position : opponent_positions) {
@@ -681,18 +779,12 @@ public:
             }
 
             if (distance(my_state.current_potision, stalk) > 2) {
-                if (DEBUG_OUTPUT) {
-                    cerr << "Stalker move" << endl;
-                }
-
                 stalkerMove(stalk, charge, false);
             } else {
-                if (DEBUG_OUTPUT) {
-                    cerr << "Random move" << endl;
-                }
-
-                randomMove(charge, false);
+                longestMove(charge, false);
             }
+
+            mineActions(false);
 
             if (!my_state.torpedo_cooldown) {
                 for (auto& position : opponent_positions) {
@@ -707,11 +799,11 @@ public:
     }
 
     string whatToCharge() const {
-        if (my_state.torpedo_cooldown > 0) {
-            return "TORPEDO";
-        }
         if (my_state.silence_cooldown > 0) {
             return "SILENCE";
+        }
+        if (my_state.torpedo_cooldown > 0) {
+            return "TORPEDO";
         }
         if (my_state.mine_cooldown > 0) {
             return "MINE";
@@ -750,6 +842,7 @@ public:
 
         bool hit = false;
         bool surfaced = false;
+        bool must_move_silently = false;
     };
 
     PlayerState my_state;
@@ -764,8 +857,9 @@ public:
     static constexpr int TILE_FREE   =  0;
     static constexpr int TILE_ISLAND = -1;
 
-    static constexpr int max_dfs_depth_for_longest_path = 20;
-    static constexpr int stalk_when_positions_less_than = 5;
+    static constexpr int max_dfs_depth_for_longest_path       = 20;
+    static constexpr int stalk_when_positions_less_than       = 5;
+    static constexpr int do_not_surface_when_stalk_below_life = 3;
 
     static constexpr bool DEBUG_OUTPUT = true;
 
