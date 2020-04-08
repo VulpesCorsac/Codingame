@@ -1,3 +1,2 @@
 1) Mines
 2) When longest path analyze also if can decrease your possible positions
-3) Maybe shoot first than move?

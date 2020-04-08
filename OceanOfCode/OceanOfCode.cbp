@@ -32,6 +32,8 @@
 			<Add option="-Wall" />
 			<Add option="-fexceptions" />
 		</Compiler>
+		<Unit filename="ToThink.txt" />
+		<Unit filename="input.txt" />
 		<Unit filename="main.cpp" />
 		<Extensions>
 			<code_completion />
