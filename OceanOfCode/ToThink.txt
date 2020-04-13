@@ -1,2 +1,5 @@
-1) Mines
-2) When longest path analyze also if can decrease your possible positions
+1) If can kill opponent and not kill myself - shoot and trigger
+2) Silence in the longest path direction
+3) Find longest path via bfs, not dfs
+4) Opponent tail cannot be crossed while silencing (thus less possible positions)
+5) When longest path analyze also if can decrease your possible positions

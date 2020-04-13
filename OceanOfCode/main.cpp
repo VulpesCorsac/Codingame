@@ -287,17 +287,37 @@ public:
     }
 
     void setMine(const Tile& tile);
-    void setMine(int row, int column) {
-        mines.insert({row, column});
+    void setMine(int row, int col) {
+        if (DEBUG_OUTPUT) {
+            cerr << "Mine inserted at {" << row << "," << col << "}" << endl;
+        }
 
-        char direction = findDirection(my_state.current_potision, row, column);
+        mines.insert({row, col});
+
+        char direction = findDirection(my_state.current_potision, row, col);
         cout << " | MINE " << direction;
 
         ++current_mines_before_silence;
     }
 
     bool triggerMine() {
-        /// TODO
+        for (auto& mine : mines) {
+            int hit = 0;
+            for (const auto& position : opponent_positions) {
+                if (distance(mine, position) <= 2) {
+                    ++hit;
+                }
+            }
+
+            if ((hit && opponent_positions.size() < 2) ||
+                (hit >= opponent_positions.size() / part_to_trigger_mine)) {
+                cout << " | TRIGGER " << mine.second << " " << mine.first;
+
+                mines.erase(mine);
+
+                return true;
+            }
+        }
 
         return false;
     }
@@ -311,7 +331,7 @@ public:
             random_shuffle(directions_numbers.begin(), directions_numbers.end());
             for (const auto& direction : directions_numbers) {
                 int row = my_state.current_potision.first  + d_row[direction];
-                int col = my_state.current_potision.second + d_row[direction];
+                int col = my_state.current_potision.second + d_col[direction];
 
                 if (canPlaceMine(row, col)) {
                     setMine(row, col);
@@ -320,7 +340,7 @@ public:
             }
         }
 
-        /// TODO trigger
+        triggerMine();
     }
 
     void surfaceMove();
@@ -693,8 +713,8 @@ public:
     static constexpr int TILE_FREE   =  0;
     static constexpr int TILE_ISLAND = -1;
 
-    static constexpr int max_dfs_depth_for_longest_path       = 20;
-    static constexpr int stalk_when_positions_less_than       = 5;
+    static constexpr int max_dfs_depth_for_longest_path       = 15;
+    static constexpr int stalk_when_positions_less_than       = 10;
     static constexpr int do_not_surface_when_stalk_below_life = 6;
     static constexpr int part_to_trigger_mine = 2;
     static constexpr int mines_before_silence = 3;
@@ -760,7 +780,7 @@ public:
     inline void printMyPosition() const;
     inline void insertMyPositionInVisitedTiles();
     inline void getMyRandomPosition();
-
+    inline void printOpponentsPositions() const;
 };
 
 int main() {
@@ -1061,6 +1081,10 @@ void Game::getMyRandomPosition() {
     my_state.current_potision = possible_positions[rand() % possible_positions.size()];
 }
 
+void Game::printOpponentsPositions() const {
+    cout << " | MSG " << opponent_positions.size();
+}
+
 void Game::surfaceMove() {
     if (DEBUG_OUTPUT) {
         cerr << "Surface move" << endl;
@@ -1090,6 +1114,8 @@ void Game::move() {
     my_state.surfaced = false;
 
     shootMove(whatToCharge());
+
+    printOpponentsPositions();
 
     cout << endl;
 }
