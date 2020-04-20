@@ -1,14 +1,14 @@
-# sighlty modified bot from https://vks.ai/2016-09-07-ai-challenge-in-78-lines
 import sys
 import time
 
 
 debug_output = True
+debug_output_board = False
 
 
 def print_to_err(*args):
     if debug_output:
-        sys.stderr.write(', '.join([str(arg) for arg in args]) + "\n")
+        sys.stderr.write(' '.join([str(arg) for arg in args]) + "\n")
 
 
 class Board():
@@ -96,11 +96,57 @@ class Game():
                         players_positions[i] = []
 
                 score, board = self.get_score_single_step(players_positions, analyze_id)
-                scores.append((score, board, neighbour))
+                scores.append([score, board, neighbour])
+        scores = sorted(scores, key=lambda x: x[0], reverse=True)
         return scores
+
+    def get_best_move(self, current_moves, analyze_id, analyse_cycles=0):
+        if analyse_cycles == 0:
+            return self.get_scores(current_moves, analyze_id)
+        else:
+            # Works worse!
+            possible_moves = []
+            for possible_move in self.neighbours_tiles[current_moves[analyze_id]]:
+                if possible_move not in self.occupied_tiles:
+                    possible_moves.append(possible_move)
+            
+            possible_moves_scores = list()
+            for possible_move in possible_moves:
+                temp_current_moves = current_moves
+                for cycle in range(analyse_cycles):
+                    order_of_turns = list(range(analyze_id, self.n_players)) + list(range(0, analyze_id))
+                    
+                    for id in order_of_turns:
+                        if id == analyze_id and cycle == 0:
+                            temp_current_moves[id] = possible_move
+                        else:
+                            scores = self.get_scores(temp_current_moves, id)
+                            
+                            if len(scores) == 0:
+                                pass
+                            else:
+                                temp_current_moves[id] = scores[0][-1]
+                possible_moves_scores.append(self.get_scores(temp_current_moves, id)[0])
+                possible_moves_scores[-1][-1] = possible_move
+            
+            return possible_moves_scores
+                
+    def make_best_move(self, current_moves):
+        scores = self.get_best_move(current_moves, self.my_id)
         
-    def get_best_move(self, current_moves, analyze_id):
-        return get_scores(current_moves, analyze_id)
+        my_location = current_moves[self.my_id]
+        if len(scores) == 0:
+            print(self.move_to_dir(my_location, my_location))
+        else:
+            best_score_move = scores[0]
+            scoring = [scores[i][0] for i in range(len(scores))]
+            print_to_err("scoring", scoring)
+            print_to_err("best", best_score_move[0])
+            
+            if debug_output_board:
+                print_to_err("board")
+                print_to_err(best_score_move[1].show())
+            print(self.move_to_dir(my_location, best_score_move[-1]))
 
     def make_move(self):
         self.n_players, self.my_id = [int(i) for i in input().split()]
@@ -116,19 +162,7 @@ class Game():
             if current_move == (-1, -1):
                 occupied_tiles = {k: v for k, v in occupied_tiles.items() if v != i}
         
-        scores = self.get_scores(current_moves, self.my_id)
-        
-        my_location = current_moves[self.my_id]
-        if len(scores) == 0:
-            print(move_to_dir(my_location, my_location))
-        else:
-            best_score_move = sorted(scores, key=lambda x: x[0], reverse=True)[0]
-            scoring = [scores[i][0] for i in range(len(scores))]
-            print_to_err("scoring", scoring)
-            print_to_err("best", best_score_move[0])
-            print_to_err("board")
-            print_to_err(best_score_move[1].show())
-            print(self.move_to_dir(my_location, best_score_move[-1]))
+        self.make_best_move(current_moves)
     
     def play(self):
         while True:

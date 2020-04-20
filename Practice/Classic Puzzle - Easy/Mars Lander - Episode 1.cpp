@@ -20,10 +20,11 @@ int main() {
     }
     
     int last_power = 4;
-    int critical_speed_vertical = 18;
+    int critical_speed_vertical = 40;
     
     // game loop
-    while (1) {
+    int frame = 1;
+    while (frame) {
         int X;
         int Y;
         int hSpeed; // the horizontal speed (in m/s), can be negative.
@@ -38,11 +39,17 @@ int main() {
 
 
         // 2 integers: rotate power. rotate is the desired rotation angle (should be 0 for level 1), power is the desired thrust power (0 to 4).
-        if (abs(vSpeed) >= critical_speed_vertical) {
-            last_power = min(last_power+1, 4);
+        if (frame <= 10) { // for fuel > 300 achievement
+            last_power = 0;
         } else {
-            last_power = max(last_power-1, 0);
-        }   
+            if (abs(vSpeed) >= critical_speed_vertical) {
+                last_power = min(last_power+1, 4);
+            } else {
+                last_power = max(last_power-1, 0);
+            }   
+        }
         cout << "0 " << last_power << endl;
+        
+        ++frame;
     }
 }
