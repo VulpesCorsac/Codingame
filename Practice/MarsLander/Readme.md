@@ -1,0 +1,1 @@
+Project is based on Di_Masta [article](https://www.codingame.com/blog/genetic-algorithm-mars-lander/?utm_source=codingame&utm_medium=details-page&utm_campaign=cg-blog&utm_content=mars-lander-2) and [repo](https://github.com/DiMasta/MarLanderEpisode2/)

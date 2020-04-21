@@ -1,141 +1,67 @@
-#include <algorithm>
-#include <iostream>
-#include <stdio.h>
-#include <vector>
-#include <math.h>
+// This is an independent project of an individual developer. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 
-#define INVALID_COORDINATE -1
-#define INVALID_LINE_ID -1
+#define SVG
+#ifdef SVG
+    #include "SVG.h"
+#endif // SVG
+
+#include "Surface.h"
+#include "Lander.h"
+#include "Chromosome.h"
+
+#include <iostream>
 
 using namespace std;
 
-class Point {
-public:
-    Point(float x = INVALID_COORDINATE, float y = INVALID_COORDINATE)
-        : x(x)
-        , y(y) {
-    }
+void loadDataFromFile(const string& filename, Surface& surface, Lander& lander) {
+    fstream file;
 
-    bool operator == (const Point& other) {
-        return x == other.x && y == other.y;
-    }
-
-    Point operator + (const Point& other) {
-        return Point(x + other.x, y + other.y);
-    }
-
-    Point& operator += (const Point& other) {
-        x += other.x;
-        y += other.y;
-
-        return *this;
-    }
-
-public:
-    float x;
-    float y;
-};
-
-inline float distance(const Point& p0, const Point& p1) {
-    auto dx = p0.x - p1.x;
-    auto dy = p0.y - p1.y;
-
-    return sqrt(dx*dx + dy*dy);
-}
-
-inline float area(const Point& p0, const Point& p1, const Point& p2) {
-    return (p1.x - p0.x) * (p2.y - p0.y) - (p1.y - p0.y) * (p2.x - p0.x);
-}
-
-class Segment {
-public:
-    Segment(const Point &p0, const Point &p1)
-        : p0(p0)
-        , p1(p1) {
-        length = distance(p0, p1);
-    }
-
-public:
-    Point p0;
-    Point p1;
-
-    float length = 0;
-};
-
-inline bool bounding_box(float a0, float a1, float b0, float b1) {
-    if (a0 > a1) {
-        swap(a0, a1);
-    }
-    if (b0 > b1) {
-        swap(b0, b1);
-    }
-
-    return max(a0, b0) <= min(a1, b1);
-}
-
-inline bool cross(const Segment& s0, const Segment& s1) {
-    return bounding_box(s0.p0.x, s0.p1.x, s1.p0.x, s1.p1.x) &&
-           bounding_box(s0.p0.y, s0.p1.y, s1.p0.y, s1.p1.y) &&
-           area(s0.p0, s0.p1, s1.p0) * area(s0.p0, s0.p1, s1.p1) <= 0 &&
-           area(s1.p0, s1.p1, s0.p0) * area(s1.p0, s1.p1, s0.p1) <= 0;
-}
-
-class Surface {
-public:
-    void addSegment(const Point& p0, const Point& p1) {
-        return addSegment(Segment(p0, p1));
-    }
-
-    void addSegment(const Segment& line) {
-        segments.push_back(line);
-    }
-
-    void findLandingSegment() {
-        landing_line_idx = INVALID_LINE_ID;
-
-        for (size_t i = 0; i < segments.size(); ++i) {
-            if (segments[i].p0.x == segments[i].p1.x) {
-                landing_line_idx = i;
-
-                break;
-            }
+    file.open(filename.c_str(), std::fstream::in);
+    if (file.is_open()) {
+        int N;
+        file >> N;
+        Point a, b;
+        file >> a.x >> a.y;
+        for (int i = 1; i < N; ++i) {
+            file >> b.x >> b.y;
+            surface.addSegment(a, b);
+            a = b;
         }
+        surface.findLandingSegment();
+
+        file >> lander.position.x >> lander.position.y;
+        file >> lander.speed.x >> lander.speed.y;
+        file >> lander.fuel >> lander.rotate >> lander.power;
+
+        file.close();
+    } else {
+        throw std::runtime_error("Cannot load surface from file");
     }
-
-    inline int landingSegment() const noexcept {
-        return landing_line_idx;
-    }
-
-    int collide(const Segment& trajectory) const {
-        for (size_t i = 0; i < segments.size(); ++i) {
-            if (cross(trajectory, segments[i])) {
-                return i;
-            }
-        }
-
-        return INVALID_LINE_ID;
-    }
-
-public:
-    vector < Segment > segments;
-
-    int landing_line_idx = INVALID_LINE_ID;
-};
-
-class Lander {
-public:
-    Lander() {}
-
-public:
-    Point position;
-    Point speed;
-
-    int fuel;
-    int rotate;
-    int power;
-};
+}
 
 int main() {
-    cout << "Hello world!" << endl;
+    Surface surface;
+    Lander lander;
+
+    loadDataFromFile("Straight landing.in", surface, lander);
+
+    cout << "Lander information:" << endl;
+    cout << lander.position.x << " " << lander.position.y << endl;
+    cout << lander.speed.x << " " << lander.speed.y << endl;
+    cout << lander.fuel << " " << lander.rotate << " " << lander.power << endl;
+
+    cout << "Surface information:" << endl;
+    cout << surface.segments.size() << endl;
+    for (const auto& segment : surface.segments) {
+        cout << segment.p0.x << " " << segment.p0.y << endl;
+    }
+    cout << surface.segments.back().p1.x << " " << surface.segments.back().p1.y << endl;
+
+#ifdef SVG
+    SVGManager svg;
+    svg.print(surface.constructSVGData(svg));
+#endif // SVG
+
     return 0;
 }
