@@ -65,6 +65,10 @@ public:
         return x != COORDINATE_INVALID && y != COORDINATE_INVALID;
     }
 
+    float length() const noexcept {
+        return sqrt(x*x + y*y);
+    }
+
 public:
     float x = COORDINATE_INVALID;
     float y = COORDINATE_INVALID;

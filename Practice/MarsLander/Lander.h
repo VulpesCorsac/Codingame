@@ -19,6 +19,9 @@ constexpr int ANGLE_RIGHT = 90;
 
 constexpr float MARS_GRAVITY = 3.711f;
 
+constexpr float MAX_SPEED_TO_LAND_HORIZONTAL = 20;
+constexpr float MAX_SPEED_TO_LAND_VERTICAL   = 40;
+
 class Lander {
 public:
     Lander() noexcept {}
@@ -39,7 +42,7 @@ public:
         power = std::min(std::max(POWER_MIN, power), POWER_MAX);
     }
 
-    void step(int d_angle, int d_power) noexcept {
+    void simulate(int d_angle, int d_power) noexcept {
         changeRotateAngle(d_angle);
         changePower(d_power);
 

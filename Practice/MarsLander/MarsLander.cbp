@@ -39,6 +39,7 @@
 		<Unit filename="Map_Constants.h" />
 		<Unit filename="Point.h" />
 		<Unit filename="Population.h" />
+		<Unit filename="Rnd.h" />
 		<Unit filename="SVG.h" />
 		<Unit filename="SVG_Constants.h" />
 		<Unit filename="Segment.h" />

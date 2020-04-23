@@ -9,6 +9,13 @@
 
 #include <vector>
 
+constexpr int SEGMENT_ID_INVALID = -1;
+
+constexpr int LANDING_ZONE_DIRECTION_INVALID = -2;
+constexpr int LANDING_ZONE_DIRECTION_LEFT    = -1;
+constexpr int LANDING_ZONE_DIRECTION_HERE    = 0;
+constexpr int LANDING_ZONE_DIRECTION_RIGHT   = +1;
+
 class Surface {
 public:
     void addSegment(const Point& p0, const Point& p1) noexcept {
@@ -23,7 +30,7 @@ public:
         landing_segment_idx = SEGMENT_ID_INVALID;
 
         for (size_t i = 0; i < segments.size(); ++i) {
-            if (segments[i].p0.x == segments[i].p1.x) {
+            if (segments[i].p0.y == segments[i].p1.y) {
                 landing_segment_idx = i;
 
                 break;
@@ -44,13 +51,17 @@ public:
 
         current_direction = current_direction == LANDING_ZONE_DIRECTION_LEFT ? LANDING_ZONE_DIRECTION_RIGHT : LANDING_ZONE_DIRECTION_LEFT;
 
-        for (int idx = landing_segment_idx+1; idx < segments.size(); ++idx) {
+        for (size_t idx = landing_segment_idx+1; idx < segments.size(); ++idx) {
             landing_zones_direction[idx] = current_direction;
         }
      }
 
     inline int landingSegmentID() const noexcept {
         return landing_segment_idx;
+    }
+
+    int collide(const Point& p1, const Point& p2) const noexcept {
+        return collide({p1, p2});
     }
 
     int collide(const Segment& trajectory) const noexcept {
@@ -77,6 +88,7 @@ public:
 
                 while (landing_zones_direction[segment_idx] != LANDING_ZONE_DIRECTION_HERE) {
                     ans += segments[segment_idx].length;
+                    segment_idx += d_idx;
                 }
 
                 return ans;
@@ -128,13 +140,5 @@ public:
         return svgStr;
 	}
 #endif // SVG
-
-public:
-    static constexpr int SEGMENT_ID_INVALID = -1;
-
-    static constexpr int LANDING_ZONE_DIRECTION_INVALID = -2;
-    static constexpr int LANDING_ZONE_DIRECTION_LEFT    = -1;
-    static constexpr int LANDING_ZONE_DIRECTION_HERE    = 0;
-    static constexpr int LANDING_ZONE_DIRECTION_RIGHT   = +1;
 };
 

@@ -20,12 +20,17 @@ int main() {
     cout << lander.fuel << " " << lander.rotate << " " << lander.power << endl;
 
     cout << "Surface information:" << endl;
+    cout << "Landing zone idx: " << surface.landing_segment_idx << endl;
     cout << surface.segments.size() << endl;
-    for (const auto& segment : surface.segments) {
-        cout << segment.p0.x << " " << segment.p0.y << endl;
+    for (size_t i = 0; i < surface.segments.size(); ++i) {
+        cout << "Segment " << i << ": ";
+        cout << "{" << surface.segments[i].p0.x << ", " << surface.segments[i].p0.y << "} - ";
+        cout << "{" << surface.segments[i].p1.x << ", " << surface.segments[i].p1.y << "} - ";
+        cout << surface.segments[i].length << " -> ";
+        cout << surface.landing_zones_direction[i] << endl;
     }
-    cout << surface.segments.back().p1.x << " " << surface.segments.back().p1.y << endl;
 
+    /*
     cout << fixed << setprecision(2);
     lander.power = 1;
     for (int frame = 0; frame < 2; ++frame) {
@@ -35,6 +40,7 @@ int main() {
         cout << "Fuel: " << lander.fuel << ", Angle: " << lander.rotate << ", Power: " << lander.power << endl;
         lander.step(0, 0);
     }
+    //*/
 
 #ifdef SVG
     SVGManager svg;

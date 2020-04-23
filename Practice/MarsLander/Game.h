@@ -8,6 +8,7 @@
 #include "Surface.h"
 #include "Lander.h"
 #include "Chromosome.h"
+#include "Population.h"
 
 #include <iostream>
 
@@ -30,6 +31,7 @@ void loadDataFromFile(const std::string& filename, Surface& surface, Lander& lan
             a = b;
         }
         surface.findLandingSegment();
+        surface.fillLandingZoneDirection();
 
         file >> lander.position.x >> lander.position.y;
         file >> lander.speed.x >> lander.speed.y;

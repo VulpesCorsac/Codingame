@@ -1,10 +1,10 @@
 # depslib dependency file v1.0
-1587554404 source:c:\users\george\yandexdisk\geo_prog\codingame\practice\marslander\main.cpp
+1587627246 source:c:\users\george\yandexdisk\geo_prog\codingame\practice\marslander\main.cpp
 	"Game.h"
 	<iostream>
 	<iomanip>
 
-1587551630 c:\users\george\yandexdisk\geo_prog\codingame\practice\marslander\surface.h
+1587627764 c:\users\george\yandexdisk\geo_prog\codingame\practice\marslander\surface.h
 	"SVG.h"
 	"Segment.h"
 	"Map_Constants.h"
@@ -41,7 +41,7 @@
 	"Lander.h"
 	<algorithm>
 
-1587491098 c:\users\george\yandexdisk\geo_prog\codingame\practice\marslander\game.h
+1587626625 c:\users\george\yandexdisk\geo_prog\codingame\practice\marslander\game.h
 	"SVG.h"
 	"Surface.h"
 	"Lander.h"
