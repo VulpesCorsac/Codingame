@@ -31,7 +31,25 @@ public:
         }
     }
 
-    inline int landingSegment() const noexcept {
+    void fillLandingZoneDirection() noexcept {
+        landing_zones_direction.assign(segments.size(), LANDING_ZONE_DIRECTION_INVALID);
+
+        auto current_direction = (segments[0].p0.x > segments[landing_segment_idx].p0.x) ? LANDING_ZONE_DIRECTION_LEFT : LANDING_ZONE_DIRECTION_RIGHT;
+
+        for (int idx = 0; idx < landing_segment_idx; ++idx) {
+            landing_zones_direction[idx] = current_direction;
+        }
+
+        landing_zones_direction[landing_segment_idx] = LANDING_ZONE_DIRECTION_HERE;
+
+        current_direction = current_direction == LANDING_ZONE_DIRECTION_LEFT ? LANDING_ZONE_DIRECTION_RIGHT : LANDING_ZONE_DIRECTION_LEFT;
+
+        for (int idx = landing_segment_idx+1; idx < segments.size(); ++idx) {
+            landing_zones_direction[idx] = current_direction;
+        }
+     }
+
+    inline int landingSegmentID() const noexcept {
         return landing_segment_idx;
     }
 
@@ -45,8 +63,27 @@ public:
         return SEGMENT_ID_INVALID;
     }
 
-    float distanceToLandingZone() const noexcept {
-        /// TODO;
+    float distanceToLandingZone(const Point& point, int segment_idx) const noexcept {
+        if (segment_idx != SEGMENT_ID_INVALID) {
+            if (segment_idx == landing_segment_idx) {
+                return std::min(distance(point, segments[segment_idx].p0), distance(point, segments[segment_idx].p1));
+            } else {
+                auto point_to_segment_edge = landing_zones_direction[segment_idx] == LANDING_ZONE_DIRECTION_LEFT ? segments[segment_idx].p0 : segments[segment_idx].p1;
+
+                auto ans = distance(point, point_to_segment_edge);
+
+                auto d_idx = landing_zones_direction[segment_idx] == LANDING_ZONE_DIRECTION_LEFT ? LANDING_ZONE_DIRECTION_LEFT : LANDING_ZONE_DIRECTION_RIGHT;
+                segment_idx += d_idx;
+
+                while (landing_zones_direction[segment_idx] != LANDING_ZONE_DIRECTION_HERE) {
+                    ans += segments[segment_idx].length;
+                }
+
+                return ans;
+            }
+        } else {
+            return MAP_MAX_DISTANCE;
+        }
     }
 
 public:

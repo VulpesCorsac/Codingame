@@ -17,12 +17,12 @@ public:
     }
 
     void fixGene() noexcept {
-        rotate = std::max(Lander::ANGLE_MIN, std::min(rotate, Lander::ANGLE_MAX));
-        power  = std::max(Lander::POWER_MIN, std::min(power , Lander::POWER_MAX));
+        rotate = std::max(ANGLE_MIN, std::min(rotate, ANGLE_MAX));
+        power  = std::max(POWER_MIN, std::min(power , POWER_MAX));
     }
 
 public:
-    int rotate = Lander::ANGLE_INVALID;
-    int power  = Lander::POWER_INVALID;
+    int rotate = ANGLE_INVALID;
+    int power  = POWER_INVALID;
 };
 

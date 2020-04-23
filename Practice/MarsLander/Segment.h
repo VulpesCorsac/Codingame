@@ -8,8 +8,8 @@ class Segment {
 public:
     Segment(const Point &p0, const Point &p1) noexcept
         : p0(p0)
-        , p1(p1) {
-        length = distance(p0, p1);
+        , p1(p1)
+        , length(distance(p0, p1)) {
     }
 
 public:

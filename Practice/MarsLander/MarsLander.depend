@@ -1,24 +1,23 @@
 # depslib dependency file v1.0
-1587460538 source:c:\users\george\yandexdisk\geo_prog\codingame\practice\marslander\main.cpp
-	"SVG.h"
-	"Surface.h"
-	"Lander.h"
-	"Chromosome.h"
+1587554404 source:c:\users\george\yandexdisk\geo_prog\codingame\practice\marslander\main.cpp
+	"Game.h"
 	<iostream>
+	<iomanip>
 
-1587460212 c:\users\george\yandexdisk\geo_prog\codingame\practice\marslander\surface.h
+1587551630 c:\users\george\yandexdisk\geo_prog\codingame\practice\marslander\surface.h
 	"SVG.h"
 	"Segment.h"
+	"Map_Constants.h"
 	<vector>
 
-1587459624 c:\users\george\yandexdisk\geo_prog\codingame\practice\marslander\segment.h
+1587547073 c:\users\george\yandexdisk\geo_prog\codingame\practice\marslander\segment.h
 	"Point.h"
 	<algorithm>
 
-1587459604 c:\users\george\yandexdisk\geo_prog\codingame\practice\marslander\point.h
+1587462510 c:\users\george\yandexdisk\geo_prog\codingame\practice\marslander\point.h
 	<math.h>
 
-1587459685 c:\users\george\yandexdisk\geo_prog\codingame\practice\marslander\lander.h
+1587554367 c:\users\george\yandexdisk\geo_prog\codingame\practice\marslander\lander.h
 	<algorithm>
 
 1587459366 c:\users\george\yandexdisk\geo_prog\codingame\practice\marslander\svg.h
@@ -30,13 +29,25 @@
 1587458550 c:\users\george\yandexdisk\geo_prog\codingame\practice\marslander\svg_constants.h
 	<string>
 
-1587459824 c:\users\george\yandexdisk\geo_prog\codingame\practice\marslander\chromosome.h
+1587542808 c:\users\george\yandexdisk\geo_prog\codingame\practice\marslander\chromosome.h
 	"Gene.h"
 	"Point.h"
 	"Lander.h"
+	"Map_Constants.h"
+	"SVG.h"
 	<vector>
 
-1587459853 c:\users\george\yandexdisk\geo_prog\codingame\practice\marslander\gene.h
+1587552805 c:\users\george\yandexdisk\geo_prog\codingame\practice\marslander\gene.h
 	"Lander.h"
 	<algorithm>
+
+1587491098 c:\users\george\yandexdisk\geo_prog\codingame\practice\marslander\game.h
+	"SVG.h"
+	"Surface.h"
+	"Lander.h"
+	"Chromosome.h"
+	<iostream>
+
+1587486189 c:\users\george\yandexdisk\geo_prog\codingame\practice\marslander\map_constants.h
+	<math.h>
 

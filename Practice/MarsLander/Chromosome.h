@@ -59,12 +59,15 @@ public:
 
         std::string strokeRGB = svg.constructStrokeForRGB(255, 255, 255);
 
-        if (hasFlag(SELECTED_FLAG)) {
+        /// TODO flags
+        /*
+        if (hasFlag(FLAG_SELECTED)) {
             strokeRGB = svg.constructStrokeForRGB(0, 0, 255);
         }
-        else if (hasFlag(SOLUTION_FLAG)) {
+        else if (hasFlag(FLAG_SOLUTION)) {
             strokeRGB = svg.constructStrokeForRGB(0, 255, 0);
         }
+        //*/
 
         svgStr.append(strokeRGB);
         svgStr.append(";");
@@ -101,5 +104,13 @@ public:
 
     Path path;
 #endif // SVG
+
+public:
+    static constexpr int CRASHED_IDX_MASK_OFFSET      = 27;
+    static constexpr int FLAG_SELECTED                = 1     ; // 1
+    static constexpr int FLAG_SOLUTION                = 1 << 1; // 2
+    static constexpr int FLAG_CRASHED_ON_LANDING_ZONE = 1 << 2;	// 4
+    static constexpr int FLAG_CRASHED                 = 1 << 4; // 8
+    static constexpr int FLAG_COPIED                  = 1 << 5; // 16
 };
 
