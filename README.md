@@ -5,6 +5,7 @@ AI's from codingame
 
 * Mars Lander - GenAlgo
 * Maze
+* BULLS AND COWS 2
 * Botters Of The Galaxy 
 * PAPER SOCCER
 * ULTIMATE TIC-TAC-TOE
