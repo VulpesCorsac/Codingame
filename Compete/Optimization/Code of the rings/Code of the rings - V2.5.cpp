@@ -29,17 +29,17 @@
 using namespace std;
 
 constexpr bool generate_answer  = true;
-constexpr bool read_from_file   = true;
+constexpr bool read_from_file   = false;
 constexpr bool must_use_pattern = false;
-constexpr bool use_dp           = false;
+constexpr bool use_dp           = true;
 
 constexpr size_t alphabet_size = 'Z' - 'A' + 1 + 1;
 constexpr size_t stones = 30;
 
-constexpr int can_dp_default_base = 300;
-constexpr int can_dp_smart_base = 45;
-constexpr int can_dp_best_base = 20;
-constexpr int dp_smart_base_step = 2;
+constexpr int can_dp_default_base = 500;
+constexpr int can_dp_smart_base   = 45;
+constexpr int can_dp_best_base    = 20;
+constexpr int dp_smart_base_step  = 2;
 
 inline int totalLength(const string& x) {
     return x.length();
@@ -459,8 +459,8 @@ auto getAnsContinuous(const string& magic_phrase, char base, char print = false)
     return ans;
 }
 
-/// TODO getAnsContinuousMT
-/// TODO getAnsContinuousBestBase
+/// TODO: getAnsContinuousMT
+/// TODO: getAnsContinuousBestBase
 
 auto getAnsBestStone(const string& magic_phrase, char base, bool can_flush) {
     auto ans = vector < string >();
@@ -837,6 +837,7 @@ auto getAnsOneLetterPattern(const string& magic_phrase) {
 }
 
 size_t repeatedWordLength(const string& magic_phrase) {
+    /// TODO: Just a fix before finding better algo
     if (magic_phrase.find(" ") != string::npos) {
         return 0;
     }
@@ -857,6 +858,7 @@ size_t repeatedWordLength(const string& magic_phrase) {
         }
     }
 
+    /// TODO: When using better algo this might not be a problem
     if (best_length > stones-2) {
         best_length = 0;
     }
@@ -864,36 +866,7 @@ size_t repeatedWordLength(const string& magic_phrase) {
     return best_length;
 }
 
-auto getBestPrintWord(const string& word) {
-    auto ans = pair < vector < string > , vector < string > >(
-                                                              {getAnsContinuous(word, ' '),
-                                                              {"[.>]"}}
-                                                              );
-    auto tmp = pair < vector < string > , vector < string > >(
-                                                              {getClosestSymbolInstruction(word[0], ' ', false)},
-                                                              getAnsBestStone(word, word[0], false)
-                                                              );
-    tmp.second.emplace_back(getClosestSymbolInstruction(word[0], word[word.length()-1], true));
-
-    #ifdef MIDDLE_DEBUG_OUTPUT
-    print(ans.first, true);
-    cerr << " ";
-    print(ans.second, true);
-    cerr << " -> " << totalLength(ans) << endl;
-    cerr << "VS\n";
-    print(tmp.first, true);
-    cerr << " ";
-    print(tmp.second, true);
-    cerr << " -> " << totalLength(tmp) << endl;
-    #endif // MIDDLE_DEBUG_OUTPUT
-
-    if (totalLength(tmp) < totalLength(ans)) {
-        ans = move(tmp);
-    }
-    return ans;
-}
-
-auto getAnsRepeatedWordLength(const string& magic_phrase, int len = -1) {
+auto getAnsRepeatedWordLength(const string& magic_phrase, int len = -1, char base = ' ') {
     auto ans = vector < string >();
     if (len == -1) {
         len = repeatedWordLength(magic_phrase);
@@ -902,25 +875,33 @@ auto getAnsRepeatedWordLength(const string& magic_phrase, int len = -1) {
 
     auto word = magic_phrase.substr(0, len);
     bool word_with_spaces = word.find(" ") != string::npos;
+    auto word_print = getAnsContinuous(magic_phrase.substr(0, len), base);
 
-    if (!word_with_spaces) {
-        auto word_print = getBestPrintWord(word);
-        for (auto& item : word_print.first) {
-            ans.push_back(move(item));
-        }
-        ans.emplace_back(">>");
-        while (repetitions > 0) {
-            int cnt = min(repetitions, static_cast < int >(alphabet_size-1));
-            ans.emplace_back(getClosestSymbolInstruction(getSymbolFromNum(cnt), ' ', true));
-            ans.emplace_back("[<<[<]>");
-            for (const auto& item : word_print.second) {
-                ans.push_back(item);
+    for (auto& item : word_print) {
+        ans.push_back(move(item));
+    }
+
+    ans.emplace_back(">>");
+
+    auto best_move = vector < string >();
+    while (repetitions > 0) {
+        int cnt = min(repetitions, static_cast < int >(alphabet_size-1));
+        ans.emplace_back(getClosestSymbolInstruction(getSymbolFromNum(cnt), base, true));
+
+        if (!word_with_spaces) {
+            ans.emplace_back("[<<[<]>[.>]>-]");
+        } else {
+            if (best_move.empty()) {
+                /// FOR EACH SPACE CHECK WHAT IS BETTER - move till or constant move
+                /// same for printing
+                best_move.emplace_back(repeatChar(' ', 1000));
+            } else {
+                for (const auto& item : best_move) {
+                    ans.push_back(item);
+                }
             }
-            ans.emplace_back(">>-]");
-            repetitions -= cnt;
         }
-    } else {
-
+        repetitions -= cnt;
     }
 
     return ans;
@@ -1042,32 +1023,32 @@ auto getAnsPattern(const string& magic_phrase) {
 
     if (oneLetterPattern(magic_phrase)) {
         temp = getAnsOneLetterPattern(magic_phrase);
-        if ((best.empty() || totalLength(temp) < totalLength(best)) && (magic_phrase == getScriptResult(temp))) {
+        if (best.empty() || totalLength(temp) < totalLength(best)) {
             best = move(temp);
         }
     }
     auto repeated_word_len = repeatedWordLength(magic_phrase);
     if (repeated_word_len) {
         temp = getAnsRepeatedWordLength(magic_phrase, repeated_word_len);
-        if ((best.empty() || totalLength(temp) < totalLength(best)) && (magic_phrase == getScriptResult(temp))) {
+        if (best.empty() || totalLength(temp) < totalLength(best)) {
             best = move(temp);
         }
     }
     if (isAlphabetSeparatedByCharPattern(magic_phrase)) {
         temp = getAnsAlphabetSeparatedByCharPattern(magic_phrase);
-        if ((best.empty() || totalLength(temp) < totalLength(best)) && (magic_phrase == getScriptResult(temp))) {
+        if (best.empty() || totalLength(temp) < totalLength(best)) {
             best = move(temp);
         }
     }
     if (isIncrementalSequencePattern(magic_phrase)) {
         temp = getAnsIncrementalSequencePattern(magic_phrase);
-        if ((best.empty() || totalLength(temp) < totalLength(best)) && (magic_phrase == getScriptResult(temp))) {
+        if (best.empty() || totalLength(temp) < totalLength(best)) {
             best = move(temp);
         }
     }
     if (isIncrementalSequenceWithSpacesPattern(magic_phrase)) {
         temp = getAnsIncrementalSequenceWithSpacesPattern(magic_phrase);
-        if ((best.empty() || totalLength(temp) < totalLength(best)) && (magic_phrase == getScriptResult(temp))) {
+        if (best.empty() || totalLength(temp) < totalLength(best)) {
             best = move(temp);
         }
     }
@@ -1176,15 +1157,9 @@ auto getAns(const string& magic_phrase) {
             }
         }
     }
-
     if (isAnyPattern(magic_phrase)) {
         cerr << "Is pattern" << endl;
         temp = move(getAnsPattern(magic_phrase));
-        /*
-        cerr << "Pattern ans: ";
-        print(temp, true);
-        cerr << endl;
-        //*/
         if (must_use_pattern || totalLength(temp) < totalLength(best)) {
             cerr << "Pattern is better : " << totalLength(temp) << " vs " << totalLength(best) << endl;
             best = move(temp);
@@ -1196,7 +1171,8 @@ auto getAns(const string& magic_phrase) {
 }
 
 int main() {
-    cerr << "|" << getScriptResult("") << "|" << endl;
+//    cerr << "|" << getScriptResult("+.+>--[<<.>.+>-]") << "|" << endl;
+//    cerr << isIncrementalSequenceWithSpacesPattern("A B C") << endl;
     #ifdef CALCULATE_SCHEME
     freopen("input.txt", "r+", stdin);
     freopen("output.txt", "w+", stdout);
@@ -1216,7 +1192,6 @@ int main() {
                 cerr << magicPhrase << endl;
                 #endif // MAIN_DEBUG_OUTPUT
                 cout << "{\"" << magicPhrase << "\",\"";
-                auto ans = getAns(magicPhrase);
                 print(getAns(magicPhrase));
                 cout << "\"}," << endl;
             }

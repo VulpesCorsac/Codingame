@@ -5,18 +5,14 @@ Pattern "ABC": "+++[>.>+.<<-]"
 Pattern "A B C": "+++[>.>+.<<-]"
 
 TODO:
+?) Multithreading? Why not working?
 0) find difference between 2.3 and 2.4 and why 2.4 can fail pattern alphabet + symbol
 1) word can be optimized as mix of single-stone and continuous
 2) word with spaces (for each space get additional <[<]< or <*n)
 3) word + word
 4) word + random sequence of 2 letters
 5) word + incremented sequence
-
-Questions:
-0) Multithreading? Why not working?
-1) Todo all patterns best base
-2) Not all patterns "survive" for a very long words
-3) Check for patterns in bf code and, probably, can improve
-
+6) patterns can depend on base
+7) Check for patterns in bf code
 
 
