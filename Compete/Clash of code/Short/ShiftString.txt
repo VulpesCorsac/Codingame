@@ -1,0 +1,10 @@
+#Ruby - 52
+n=gets.to_i
+s=gets.chars
+n.times{s.rotate!}
+$><<s*''
+
+#Python - 53
+n,w=int(input()),input()
+n%=len(w)
+print(w[n:]+w[:n])

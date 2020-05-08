@@ -7,10 +7,6 @@ AI's from codingame
 
 * Mars Lander - GenAlgo
 * Maze
-* BULLS AND COWS 2
-* Botters Of The Galaxy 
-* PAPER SOCCER
-* ULTIMATE TIC-TAC-TOE
-* Code of Ice and Fire
-* Coders strike back
-* Great escape
+* The Labyrinth
+* Bulls and Cows 2
+* Coders Strike Back

@@ -1,0 +1,10 @@
+# JS - 46
+l=readline
+k=l()-~~(60/l()*l())
+print(k>0?k:0)
+
+# py - 64
+O,I=int,input
+x,n,t=O(I()),O(I()),O(I())
+print(max(x-t*60//n,0))
+
