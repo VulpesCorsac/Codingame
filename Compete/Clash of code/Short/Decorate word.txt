@@ -1,0 +1,7 @@
+# py - 106
+w,d,o=input().split()
+o=int(o)
+n=len(w)+2*(1+o)
+l=[d*n]*(2*o+1)
+l[o]=d*o+' '+w+' '+d*o
+print('\n'.join(l))
